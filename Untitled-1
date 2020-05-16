@@ -1,0 +1,1 @@
+curl -H "Content-Type: application/json" -X POST -d '{"user":"bob","pass":"123"}' http://URL/
