@@ -21,6 +21,8 @@ Then open another terminal in the same directory, and run the following line:
 
 pipenv run python3 blockchain.py -p 5001
 
+*Note that for both terminals, make sure you have an extra tab opened in each so that you can run the cUrl commands
+
 Now you will have two blockchains running on port 5000 and port 5001
 
 To view the current chain:
