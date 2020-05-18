@@ -255,6 +255,11 @@ def longest_chain():
 
     return jsonify(response), 200
 
+@app.route("/")
+def home_page():
+    return "<h1> CPSC 452 Group Project - Blockchain</h1>"
+
+
 if __name__ == '__main__':
     from argparse import ArgumentParser
 

@@ -10,6 +10,7 @@ Marianne Tolentino - mariannetolentino@csu.fullerton.edu
 Julian Coronado - juliancoronado@csu.fullerton.edu
 
 Andrew Lopez - alopez8969@csu.fullerton.edu
+
 -----------------------------
 As of right now, our blockchain will be ran on the localhost:5000 by default
 
