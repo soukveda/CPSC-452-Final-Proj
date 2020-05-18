@@ -5,7 +5,7 @@ from Crypto.Hash import SHA512
 from time import time
 from uuid import uuid4
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from urllib.parse import urlparse
 import requests
 
@@ -187,14 +187,13 @@ def mine():
     block = blockchain.create_block(proof, prev_hash)
 
     response = {
-        'message': "A new Block has been created",
         'index': block['index'],
         'transactions': block['transactions'],
         'proof': block['proof'],
         'previous_hash': block['previous_hash'],
     }
 
-    return jsonify(response), 200
+    return render_template("mine.html", block = response)
 
 @app.route('/transaction/new', methods=['POST'])
 def create_transc():
@@ -217,7 +216,11 @@ def chain():
         'chain': blockchain.chain,
         'length of chain': len(blockchain.chain)
     }
-    return jsonify(response), 200
+    return render_template("chain.html", chain_info = response, length = response['length of chain'])
+
+@app.route('/recent')
+def recent():
+    return render_template("recent.html", view_block = blockchain.chain[-1])
 
 @app.route('/node/register', methods=['POST'])
 def reg_node():
@@ -256,9 +259,8 @@ def longest_chain():
     return jsonify(response), 200
 
 @app.route("/")
-def home_page():
-    return "<h1> CPSC 452 Group Project - Blockchain</h1>"
-
+def homepage():
+    return render_template('homepage.html')
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
