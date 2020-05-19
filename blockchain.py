@@ -169,7 +169,7 @@ class Blockchain(object):
         # Return the last block in the chain
         return self.chain[-1]
     
-        def get_signature(self, sender, receiver, amount, dsa_rsa):
+    def get_signature(self, sender, receiver, amount, dsa_rsa):
         # Combine sender, receiver, and amount info to digitally sign
         data = sender + receiver + str(amount)
         if dsa_rsa == "dsa":
