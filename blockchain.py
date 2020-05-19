@@ -41,19 +41,23 @@ class Blockchain(object):
         self.chain.append(block)
         return block
         
-    def create_transc(self, sender, receiver, amount):
+    def create_transc(self, sender, receiver, amount, dsa_rsa, signature):
         # Create a new transaction to add to the list of transactions
         # param sender: <str> contains the address of the sender
         # param receiver: <str> contains the address of the receiver
         # param amount: <int> amount
         #return: <int> the index of the block that will hold this transacation
 
+        # Trying out DSA algorithm for the amount in data
+
         self.currTransacs.append({
             'sender': sender,
             'receiver': receiver,
             'amount': amount,
+            'dsa_rsa': dsa_rsa,
+            'signature': signature,
         })
-
+        print(self.currTransacs)
         return self.final_block['index'] + 1
 
     def reg_node(self, address):
@@ -163,6 +167,18 @@ class Blockchain(object):
     def final_block(self):
         # Return the last block in the chain
         return self.chain[-1]
+    
+    def get_signature(self, amount, dsa_rsa):
+        if dsa_rsa == "dsa":
+            print("DSA is chosen")
+            dsa_sign = DSA(283, 47, 60, str(amount), 'sign', 24, 0, 0)
+            return dsa_sign.sign()
+
+    def verify_new_transaction(self, amount, dsa_rsa, signature):
+        if dsa_rsa == "dsa":
+            print("DSA is chosen")
+            verification = DSA(283, 47, 60, str(amount), 'verify', 158, signature[0], signature[1])
+            return verification.verify()
 
 # Instantiate server node
 app = Flask(__name__)
@@ -197,6 +213,7 @@ def mine():
 
     return render_template("mine.html", block = response)
 
+"""
 @app.route('/transaction/new', methods=['POST'])
 def create_transc():
     data = request.get_json()
@@ -210,6 +227,37 @@ def create_transc():
     indx = blockchain.create_transc(data['sender'], data['receiver'], data['amount'])
 
     response = {'message': f'The new transaction will be added to Block {indx}'}
+    return jsonify(response), 201
+"""
+
+@app.route('/transactions/new', methods=['POST'])
+def create_transc():
+    data = request.get_json()
+
+    # Check to make sure we are not missing any important information
+    required = ['sender', 'receiver', 'amount', 'dsa_rsa']
+    if not all(k in data for k in required):
+        return 'Missing data', 400
+    
+    # Create signature for RSA or DSA
+    signature = blockchain.get_signature(data['amount'], data['dsa_rsa'])
+
+    # Create a new transaction
+    indx = blockchain.create_transc(data['sender'], data['receiver'], data['amount'], data['dsa_rsa'], signature)
+
+    response = {'message': f'The new transaction will be added to Block {indx}'}
+    return jsonify(response), 201
+
+
+@app.route('/transactions/verify')
+def verify_transc():
+    # Get the latest transaction to verify
+    jsonData = json.dumps(blockchain.currTransacs[len(blockchain.currTransacs)-1])
+    data = json.loads(jsonData)
+    print(data['signature'])
+
+    verified = blockchain.verify_new_transaction(data['amount'], data['dsa_rsa'], data['signature'])
+    response = {'message': f'The new transaction is {verified}'}
     return jsonify(response), 201
 
 @app.route('/chain', methods=['GET'])
