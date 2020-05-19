@@ -32,8 +32,8 @@ class RSAClass:
         return key
 
     def getSignature(self, signKey):
-        dataHash = SHA512.new(self.message.encode()).hexdigest()
-        sig = signKey.sign(dataHash.encode(), '')
+        dataHash = SHA512.new(self.message.encode()).digest()
+        sig = signKey.sign(dataHash, '')
         print(f'signature tuple: {sig}')
         tupleToStr = ''.join(str(sig) for v in sig)
         print(f'signature string: {tupleToStr}')
@@ -51,7 +51,7 @@ class RSAClass:
         return keyTuple
 
     def verifyFileSig(self, key, keyTuple):
-        dataHash = SHA512.new(self.message.encode()).hexdigest()
+        dataHash = SHA512.new(self.message.encode()).digest()
         isValid = self.verifySig(dataHash, keyTuple, key)
         return isValid
 
@@ -101,3 +101,6 @@ if __name__ == '__main__':
 
     #else:
         #print("Invalid mode", mode)
+
+
+
