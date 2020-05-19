@@ -168,16 +168,18 @@ class Blockchain(object):
         # Return the last block in the chain
         return self.chain[-1]
     
-    def get_signature(self, amount, dsa_rsa):
+    def get_signature(self, sender, receiver, amount, dsa_rsa):
         if dsa_rsa == "dsa":
             print("DSA is chosen")
-            dsa_sign = DSA(283, 47, 60, str(amount), 'sign', 24, 0, 0)
+            data = sender+receiver+str(amount)
+            dsa_sign = DSA(283, 47, 60, data, 'sign', 24, 0, 0)
             return dsa_sign.sign()
 
-    def verify_new_transaction(self, amount, dsa_rsa, signature):
+    def verify_new_transaction(self, sender, receiver, amount, dsa_rsa, signature):
         if dsa_rsa == "dsa":
             print("DSA is chosen")
-            verification = DSA(283, 47, 60, str(amount), 'verify', 158, signature[0], signature[1])
+            data = sender + receiver + str(amount)
+            verification = DSA(283, 47, 60, data, 'verify', 158, signature[0], signature[1])
             return verification.verify()
 
 # Instantiate server node
@@ -238,9 +240,9 @@ def create_transc():
     required = ['sender', 'receiver', 'amount', 'dsa_rsa']
     if not all(k in data for k in required):
         return 'Missing data', 400
-    
+
     # Create signature for RSA or DSA
-    signature = blockchain.get_signature(data['amount'], data['dsa_rsa'])
+    signature = blockchain.get_signature(data['sender'], data['receiver'], data['amount'], data['dsa_rsa'])
 
     # Create a new transaction
     indx = blockchain.create_transc(data['sender'], data['receiver'], data['amount'], data['dsa_rsa'], signature)
@@ -256,7 +258,7 @@ def verify_transc():
     data = json.loads(jsonData)
     print(data['signature'])
 
-    verified = blockchain.verify_new_transaction(data['amount'], data['dsa_rsa'], data['signature'])
+    verified = blockchain.verify_new_transaction(data['sender'], data['receiver'], data['amount'], data['dsa_rsa'], data['signature'])
     response = {'message': f'The new transaction is {verified}'}
     return jsonify(response), 201
 
