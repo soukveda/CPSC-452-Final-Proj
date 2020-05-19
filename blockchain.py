@@ -9,6 +9,8 @@ from flask import Flask, jsonify, request, render_template
 from urllib.parse import urlparse
 import requests
 
+from user import User
+
 class Blockchain(object):
     def __init__(self):
         self.chain = []
