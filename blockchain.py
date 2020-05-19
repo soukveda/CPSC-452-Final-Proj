@@ -9,6 +9,7 @@ from flask import Flask, jsonify, request, render_template
 from urllib.parse import urlparse
 import requests
 from DSASignandVerify import DSA
+from RSASignandVerify import RSA
 from user import User
 
 class Blockchain(object):
@@ -168,19 +169,35 @@ class Blockchain(object):
         # Return the last block in the chain
         return self.chain[-1]
     
-    def get_signature(self, sender, receiver, amount, dsa_rsa):
+        def get_signature(self, sender, receiver, amount, dsa_rsa):
+        # Combine sender, receiver, and amount info to digitally sign
+        data = sender + receiver + str(amount)
         if dsa_rsa == "dsa":
             print("DSA is chosen")
-            data = sender+receiver+str(amount)
             dsa_sign = DSA(283, 47, 60, data, 'sign', 24, 0, 0)
             return dsa_sign.sign()
+        elif dsa_rsa == "rsa":
+            print("RSA is chosen")
+            keyPath = input("What filename is your privKey in?")
+            rsa_sign = RSAClass(keyPath, '', data)
+            signKey = rsa_sign.loadKey()
+            rsa_sign.signature = rsa_sign.getSignature(signKey)
+            return rsa_sign.signature
 
     def verify_new_transaction(self, sender, receiver, amount, dsa_rsa, signature):
+        # Combine sender, receiver, and amount info to digitally sign
+        data = sender + receiver + str(amount)
         if dsa_rsa == "dsa":
             print("DSA is chosen")
-            data = sender + receiver + str(amount)
-            verification = DSA(283, 47, 60, data, 'verify', 158, signature[0], signature[1])
-            return verification.verify()
+            dsa_verify = DSA(283, 47, 60, data, 'verify', 158, signature[0], signature[1])
+            return dsa_verify.verify()
+        elif dsa_rsa == "rsa":
+            print("RSA is chosen")
+            keyPath = input("What filename is your privKey in?")
+            rsa_verify = RSAClass(keyPath, signature, data)
+            signKey = rsa_verify.loadKey()
+            keyTuple = rsa_verify.loadSig()
+            return rsa_verify.verifyFileSig(signKey, keyTuple)
 
 # Instantiate server node
 app = Flask(__name__)
