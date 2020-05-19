@@ -27,17 +27,13 @@ class DSA:
             k = random.randint(1, self.q-1)
             X = (self.g**k) % self.p
             r = X % self.q
-            if r == 0:
-                start_over = False
-            else:
-                start_over = True
             K = self.modInverse(k, self.q)
 
             h = int(hashlib.sha256(self.M.encode()).hexdigest(), base=16) % self.q
 
             s = (K*(h + self.key*r)) % self.q
 
-            if s == 0:
+            if s == 0 or r == 0:
                 start_over = True
             else:
                 start_over = False
@@ -92,5 +88,8 @@ if __name__ == '__main__':
                 print("Verification failed!")
         else:
             print("Signature failed!")
+
+
+
 
 
