@@ -42,7 +42,7 @@ class Blockchain(object):
         self.chain.append(block)
         return block
         
-    def create_transc(self, sender, receiver, amount, dsa_rsa, signature):
+    def create_transc(self, sender, receiver, amount, dsa_rsa, confidential_signature, signature):
         # Create a new transaction to add to the list of transactions
         # param sender: <str> contains the address of the sender
         # param receiver: <str> contains the address of the receiver
@@ -56,6 +56,7 @@ class Blockchain(object):
             'receiver': receiver,
             'amount': amount,
             'dsa_rsa': dsa_rsa,
+            'confidential_signature': confidential_signature,
             'signature': signature,
         })
         print(self.currTransacs)
@@ -169,35 +170,57 @@ class Blockchain(object):
         # Return the last block in the chain
         return self.chain[-1]
     
-    def get_signature(self, sender, receiver, amount, dsa_rsa):
+    def get_signature(self, sender, receiver, amount, dsa_rsa, confidential_signature):
         # Combine sender, receiver, and amount info to digitally sign
         data = sender + receiver + str(amount)
+        for i in list_of_users:
+            if confidential_signature == 'confidential' and i.address == receiver:
+                key = i.pub_key
+                print(key)
+            elif confidential_signature == 'signature' and i.address == sender:
+                key = i.priv_key
+                print(key)
         if dsa_rsa == "dsa":
             print("DSA is chosen")
-            dsa_sign = DSA(283, 47, 60, data, 'sign', 24, 0, 0)
+            dsa_sign = DSA(283, 47, 60, data, 'sign', key, 0, 0)
             return dsa_sign.sign()
         elif dsa_rsa == "rsa":
             print("RSA is chosen")
-            keyPath = input("What filename is your privKey in?")
-            rsa_sign = RSAClass(keyPath, '', data)
+            #keyPath = input("What filename is your privKey in?")
+            rsa_sign = RSAClass(key, '', data)
             signKey = rsa_sign.loadKey()
             rsa_sign.signature = rsa_sign.getSignature(signKey)
             return rsa_sign.signature
 
-    def verify_new_transaction(self, sender, receiver, amount, dsa_rsa, signature):
+    def verify_new_transaction(self, sender, receiver, amount, dsa_rsa, confidential_signature, signature):
         # Combine sender, receiver, and amount info to digitally sign
         data = sender + receiver + str(amount)
+        print('VERIFYING TRANSACTION')
+        for i in list_of_users:
+            if confidential_signature == 'confidential' and i.address == receiver:
+                key = i.priv_key
+                print(key)
+            elif confidential_signature == 'signature' and i.address == sender:
+                key = i.pub_key
+                print(key)
         if dsa_rsa == "dsa":
             print("DSA is chosen")
-            dsa_verify = DSA(283, 47, 60, data, 'verify', 158, signature[0], signature[1])
+            dsa_verify = DSA(283, 47, 60, data, 'verify', key, signature[0], signature[1])
             return dsa_verify.verify()
         elif dsa_rsa == "rsa":
             print("RSA is chosen")
-            keyPath = input("What filename is your privKey in?")
-            rsa_verify = RSAClass(keyPath, signature, data)
+            #keyPath = input("What filename is your privKey in?")
+            rsa_verify = RSAClass(key, signature, data)
             signKey = rsa_verify.loadKey()
             keyTuple = rsa_verify.loadSig()
             return rsa_verify.verifyFileSig(signKey, keyTuple)
+
+    def create_new_user(self, address, privKey, pubKey):
+        temp = User(address, privKey, pubKey)
+        if temp in list_of_users:
+            return True
+        else:
+            return False
 
 # Instantiate server node
 app = Flask(__name__)
@@ -254,15 +277,15 @@ def create_transc():
     data = request.get_json()
 
     # Check to make sure we are not missing any important information
-    required = ['sender', 'receiver', 'amount', 'dsa_rsa']
+    required = ['sender', 'receiver', 'amount', 'dsa_rsa', 'confidential_signature']
     if not all(k in data for k in required):
         return 'Missing data', 400
 
-    # Create signature for RSA or DSA
-    signature = blockchain.get_signature(data['sender'], data['receiver'], data['amount'], data['dsa_rsa'])
+    # Create signature/confidental for RSA or DSA
+    signature = blockchain.get_signature(data['sender'], data['receiver'], data['amount'], data['dsa_rsa'], data['confidential_signature'])
 
     # Create a new transaction
-    indx = blockchain.create_transc(data['sender'], data['receiver'], data['amount'], data['dsa_rsa'], signature)
+    indx = blockchain.create_transc(data['sender'], data['receiver'], data['amount'], data['dsa_rsa'], data['confidential_signature'], signature)
 
     response = {'message': f'The new transaction will be added to Block {indx}'}
     return jsonify(response), 201
@@ -272,12 +295,33 @@ def create_transc():
 def verify_transc():
     # Get the latest transaction to verify
     jsonData = json.dumps(blockchain.currTransacs[len(blockchain.currTransacs)-1])
+    print(blockchain.currTransacs)
     data = json.loads(jsonData)
+    print(data)
     print(data['signature'])
 
-    verified = blockchain.verify_new_transaction(data['sender'], data['receiver'], data['amount'], data['dsa_rsa'], data['signature'])
+    verified = blockchain.verify_new_transaction(data['sender'], data['receiver'], data['amount'], data['dsa_rsa'], data['confidential_signature'], data['signature'])
     response = {'message': f'The new transaction is {verified}'}
     return jsonify(response), 201
+
+
+@app.route('/createUser', methods=['POST'])
+def createUser():
+    data = request.get_json()
+    # Check to make sure we are not missing any important information
+    required = ['address', 'privKey', 'pubKey']
+    if not all(k in data for k in required):
+        return 'Missing data', 400
+
+    validUser = blockchain.create_new_user(data['address'], data['privKey'], data['pubKey'])
+    for i in list_of_users:
+        print(i.__dict__)
+    if validUser:
+        response = {'message': f'The new user has been created!'}
+    else:
+        response = {'message': 'The new user could not be created!'}
+    return jsonify(response), 201
+
 
 @app.route('/chain', methods=['GET'])
 def chain():
