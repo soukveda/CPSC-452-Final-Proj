@@ -49,7 +49,6 @@ class Blockchain(object):
         # param amount: <int> amount
         #return: <int> the index of the block that will hold this transacation
 
-        # Trying out DSA algorithm for the amount in data
 
         self.currTransacs.append({
             'sender': sender,
@@ -58,8 +57,15 @@ class Blockchain(object):
             'dsa_rsa': dsa_rsa,
             'signature': signature,
         })
-        print(self.currTransacs)
-        return self.final_block['index'] + 1
+        for i in list_of_users:
+            if i.address == sender and i.amount >= amount:
+                i.amount -= amount
+                for j in list_of_users:
+                    if j.address == receiver:
+                        j.amount += amount
+                return self.final_block['index'] + 1
+            elif i.address == sender and i.amount < amount:
+                return 0
 
     def reg_node(self, address):
         # Add a new node to the list of nodes
@@ -215,6 +221,14 @@ class Blockchain(object):
         else:
             return False
 
+    def wallet(self, address):
+        amount = 0
+        for i in list_of_users:
+            if i.address == address:
+                amount = i.amount
+        return amount
+
+
 # Instantiate server node
 app = Flask(__name__)
 
@@ -246,7 +260,17 @@ def mine():
         'previous_hash': block['previous_hash'],
     }
 
-   # return render_template("mine.html", block = response)
+    return jsonify(response), 201
+
+@app.route('/wallet', methods=['POST'])
+def check_wallet():
+    data = request.get_json()
+    # Check to make sure we are not missing any important information
+    required = ['address']
+    if not all(k in data for k in required):
+        return 'Missing data', 400
+    amount = blockchain.wallet(data['address'])
+    response = {'message': f'You have {amount} in your wallet'}
     return jsonify(response), 201
 
 @app.route('/transactions/new', methods=['POST'])
@@ -263,8 +287,10 @@ def create_transc():
 
     # Create a new transaction
     indx = blockchain.create_transc(data['sender'], data['receiver'], data['amount'], data['dsa_rsa'], signature)
-
-    response = {'message': f'The new transaction will be added to Block {indx}'}
+    if indx == 0:
+        response = {'message': f'The new transaction could not be added to the blockchain'}
+    else:
+        response = {'message': f'The new transaction will be added to Block {indx}'}
     return jsonify(response), 201
 
 

@@ -10,7 +10,7 @@ class User(object):
         self.address = address
         self.priv_key = priv
         self.pub_key = pub
-        self.amount = 0
+        self.amount = 5
         unique = True
         for i in list_of_users:
             if i.address == address or i.priv_key == priv or i.pub_key == pub:
