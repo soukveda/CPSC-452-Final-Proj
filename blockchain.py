@@ -5,7 +5,7 @@ from Crypto.Hash import SHA512
 from time import time
 from uuid import uuid4
 
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request
 from urllib.parse import urlparse
 import requests
 from DSASignandVerify import DSA
@@ -348,10 +348,6 @@ def longest_chain():
         }
 
     return jsonify(response), 200
-
-@app.route("/")
-def homepage():
-    return render_template('homepage.html')
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
