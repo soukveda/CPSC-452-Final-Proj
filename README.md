@@ -65,12 +65,10 @@ curl -X POST -H "Content-Type: application/json" -d '{
 
 
 This is how you verify the transaction's digital signature:
-
-curl http://localhost:5000/transactions/verify
+  curl http://localhost:5000/transactions/verify
 
 
 This is how you check a wallet after a transaction:
-
-curl -X POST -H "Content-Type: application/json" -d '{
+  curl -X POST -H "Content-Type: application/json" -d '{
 "address": "a77f5cdfa2934df3954a4c7c7da5df1f"
 }' http://localhost:5000/wallet
