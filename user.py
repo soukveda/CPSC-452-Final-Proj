@@ -26,13 +26,6 @@ class User(object):
         return 0
 
 
-class Miner(object):
-    def __init__(self):
-        self.id = len(list_of_miners) + 1
-        self.amount = 0
-
-
-
 if __name__ == '__main__':
 
     temp = User(1, 2, 3)

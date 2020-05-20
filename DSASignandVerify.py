@@ -1,11 +1,7 @@
 import os, random, struct, re
 import sys
-from Crypto.Cipher import AES
-from Crypto.PublicKey import RSA
-from Crypto.Signature import PKCS1_v1_5
-from Crypto.Hash import SHA512
 import hashlib
-from base64 import b64encode, b64decode
+
 
 
 class DSA:

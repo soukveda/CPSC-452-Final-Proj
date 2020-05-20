@@ -42,7 +42,7 @@ class Blockchain(object):
         self.chain.append(block)
         return block
         
-    def create_transc(self, sender, receiver, amount, dsa_rsa, confidential_signature, signature):
+    def create_transc(self, sender, receiver, amount, dsa_rsa, signature):
         # Create a new transaction to add to the list of transactions
         # param sender: <str> contains the address of the sender
         # param receiver: <str> contains the address of the receiver
@@ -56,7 +56,6 @@ class Blockchain(object):
             'receiver': receiver,
             'amount': amount,
             'dsa_rsa': dsa_rsa,
-            'confidential_signature': confidential_signature,
             'signature': signature,
         })
         print(self.currTransacs)
@@ -170,14 +169,11 @@ class Blockchain(object):
         # Return the last block in the chain
         return self.chain[-1]
     
-    def get_signature(self, sender, receiver, amount, dsa_rsa, confidential_signature):
+    def get_signature(self, sender, receiver, amount, dsa_rsa):
         # Combine sender, receiver, and amount info to digitally sign
         data = sender + receiver + str(amount)
         for i in list_of_users:
-            if confidential_signature == 'confidential' and i.address == receiver:
-                key = i.pub_key
-                print(key)
-            elif confidential_signature == 'signature' and i.address == sender:
+            if i.address == sender:
                 key = i.priv_key
                 print(key)
         if dsa_rsa == "dsa":
@@ -192,15 +188,12 @@ class Blockchain(object):
             rsa_sign.signature = rsa_sign.getSignature(signKey)
             return rsa_sign.signature
 
-    def verify_new_transaction(self, sender, receiver, amount, dsa_rsa, confidential_signature, signature):
+    def verify_new_transaction(self, sender, receiver, amount, dsa_rsa, signature):
         # Combine sender, receiver, and amount info to digitally sign
         data = sender + receiver + str(amount)
         print('VERIFYING TRANSACTION')
         for i in list_of_users:
-            if confidential_signature == 'confidential' and i.address == receiver:
-                key = i.priv_key
-                print(key)
-            elif confidential_signature == 'signature' and i.address == sender:
+            if i.address == sender:
                 key = i.pub_key
                 print(key)
         if dsa_rsa == "dsa":
@@ -240,7 +233,7 @@ def mine():
 
     # Award an amount for calculating the proof
     # We can set the sender to "0" to signify that this node has mined a new coin
-    blockchain.create_transc(sender="0", receiver=nodeID, amount=1)
+    blockchain.create_transc(sender="0", receiver=nodeID, amount=1, dsa_rsa=None, signature=None)
 
     # now we can add the new block to the chain
     prev_hash = blockchain.hash_block(rear_block)
@@ -253,39 +246,23 @@ def mine():
         'previous_hash': block['previous_hash'],
     }
 
-    return render_template("mine.html", block = response)
-
-"""
-@app.route('/transaction/new', methods=['POST'])
-def create_transc():
-    data = request.get_json()
-
-    # Check to make sure we are not missing any important information
-    required = ['sender', 'receiver', 'amount']
-    if not all(k in data for k in required):
-        return 'Missing data', 400
-
-    # Create a new transaction
-    indx = blockchain.create_transc(data['sender'], data['receiver'], data['amount'])
-
-    response = {'message': f'The new transaction will be added to Block {indx}'}
+   # return render_template("mine.html", block = response)
     return jsonify(response), 201
-"""
 
 @app.route('/transactions/new', methods=['POST'])
 def create_transc():
     data = request.get_json()
 
     # Check to make sure we are not missing any important information
-    required = ['sender', 'receiver', 'amount', 'dsa_rsa', 'confidential_signature']
+    required = ['sender', 'receiver', 'amount', 'dsa_rsa']
     if not all(k in data for k in required):
         return 'Missing data', 400
 
     # Create signature/confidental for RSA or DSA
-    signature = blockchain.get_signature(data['sender'], data['receiver'], data['amount'], data['dsa_rsa'], data['confidential_signature'])
+    signature = blockchain.get_signature(data['sender'], data['receiver'], data['amount'], data['dsa_rsa'])
 
     # Create a new transaction
-    indx = blockchain.create_transc(data['sender'], data['receiver'], data['amount'], data['dsa_rsa'], data['confidential_signature'], signature)
+    indx = blockchain.create_transc(data['sender'], data['receiver'], data['amount'], data['dsa_rsa'], signature)
 
     response = {'message': f'The new transaction will be added to Block {indx}'}
     return jsonify(response), 201
@@ -300,7 +277,7 @@ def verify_transc():
     print(data)
     print(data['signature'])
 
-    verified = blockchain.verify_new_transaction(data['sender'], data['receiver'], data['amount'], data['dsa_rsa'], data['confidential_signature'], data['signature'])
+    verified = blockchain.verify_new_transaction(data['sender'], data['receiver'], data['amount'], data['dsa_rsa'], data['signature'])
     response = {'message': f'The new transaction is {verified}'}
     return jsonify(response), 201
 
@@ -329,11 +306,12 @@ def chain():
         'chain': blockchain.chain,
         'length of chain': len(blockchain.chain)
     }
-    return render_template("chain.html", chain_info = response, length = response['length of chain'])
+    return jsonify(response), 201
 
 @app.route('/recent')
 def recent():
-    return render_template("recent.html", view_block = blockchain.chain[-1])
+    response = blockchain.chain[-1]
+    return jsonify(response), 201
 
 @app.route('/node/register', methods=['POST'])
 def reg_node():
