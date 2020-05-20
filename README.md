@@ -56,6 +56,7 @@ Then on port 5001, verify the chain of port 5000, and if it is longer than your 
 curl http://localhost:5000/node/resolve 
 
 This is how you add a new transaction with a digital signature, after mining a new block:
+
 curl -X POST -H "Content-Type: application/json" -d '{
  "sender": "d4ee26eee15148ee92c6cd394edd974e",
  "receiver": "someone-other-address",
@@ -65,10 +66,12 @@ curl -X POST -H "Content-Type: application/json" -d '{
 
 
 This is how you verify the transaction's digital signature:
+
 curl http://localhost:5000/transactions/verify
 
 
 This is how you check a wallet after a transaction:
+
 curl -X POST -H "Content-Type: application/json" -d '{
 "address": "a77f5cdfa2934df3954a4c7c7da5df1f"
 }' http://localhost:5000/wallet
