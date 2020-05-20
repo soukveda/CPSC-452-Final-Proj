@@ -9,7 +9,7 @@ from flask import Flask, jsonify, request, render_template
 from urllib.parse import urlparse
 import requests
 from DSASignandVerify import DSA
-from RSASignandVerify import RSA
+from RSASignandVerify import RSAClass
 from user import User, list_of_users
 
 class Blockchain(object):
