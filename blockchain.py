@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 import requests
 from DSASignandVerify import DSA
 from RSASignandVerify import RSA
-from user import User
+from user import User, list_of_users
 
 class Blockchain(object):
     def __init__(self):
